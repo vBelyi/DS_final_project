@@ -1,0 +1,102 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+
+# Завантаження великого датасету з результатами ігор
+matches_data = pd.read_csv('final_df_2019_2023.csv') 
+
+# Визначення залежної та незалежних змінних для home
+home_dependent_variable = 'HomeWin' 
+home_independent_variables = ['FTHG', 'HS', 'HST', 'AR', 'HomeTeam_Elo_Rating', 'AwayTeam_Elo_Rating']
+
+X_home = matches_data[home_independent_variables]
+y_home = matches_data[home_dependent_variable]
+
+X_home_train, X_home_test, y_home_train, y_home_test = train_test_split(X_home, y_home, test_size=0.2, random_state=42)
+
+# Визначення залежної та незалежних змінних для нічиєї
+draw_dependent_variable = 'Draw'
+draw_independent_variables = ['FTHG', 'HS', 'HST', 'AR', 'HomeTeam_Elo_Rating', 'AwayTeam_Elo_Rating', 'FTAG', 'AS', 'AST', 'HR']
+
+X_draw = matches_data[draw_independent_variables]
+y_draw = matches_data[draw_dependent_variable]
+
+# Розділення даних на навчальний і тестовий набори для нічиєї
+X_draw_train, X_draw_test, y_draw_train, y_draw_test = train_test_split(X_draw, y_draw, test_size=0.2, random_state=42)
+
+# Визначення залежної та незалежних змінних для перемоги гостьової команди
+away_win_dependent_variable = 'AwayWin'
+away_win_independent_variables = ['HomeTeam_Elo_Rating', 'AwayTeam_Elo_Rating', 'FTAG', 'AS', 'AST', 'HR']
+
+X_away_win = matches_data[away_win_independent_variables]
+y_away_win = matches_data[away_win_dependent_variable]
+
+# Розділення даних на навчальний і тестовий набори для перемоги гостьової команди
+X_away_win_train, X_away_win_test, y_away_win_train, y_away_win_test = train_test_split(X_away_win, y_away_win, test_size=0.2, random_state=42)
+
+# Стандартизація даних для home win
+scaler_home = StandardScaler()
+X_home_train = scaler_home.fit_transform(X_home_train)
+X_home_test = scaler_home.transform(X_home_test)
+
+# Стандартизація даних для нічиєї
+scaler_draw = StandardScaler()
+X_draw_train = scaler_draw.fit_transform(X_draw_train)
+X_draw_test = scaler_draw.transform(X_draw_test)
+
+# Стандартизація даних для перемоги гостьової команди
+scaler_away_win = StandardScaler()
+X_away_win_train = scaler_away_win.fit_transform(X_away_win_train)
+X_away_win_test = scaler_away_win.transform(X_away_win_test)
+
+# Побудова та навчання моделі логістичної регресії home
+model_home = LogisticRegression()
+model_home.fit(X_home_train, y_home_train)
+
+# Побудова та навчання моделі логістичної регресії для нічиєї
+model_draw = LogisticRegression()
+model_draw.fit(X_draw_train, y_draw_train)
+
+# Побудова та навчання моделі логістичної регресії для перемоги гостьової команди
+model_away_win = LogisticRegression()
+model_away_win.fit(X_away_win_train, y_away_win_train)
+
+# Прогнозування результатів home
+y_home_pred = model_home.predict(X_home_test)
+
+# Прогнозування результатів для нічиєї
+y_draw_pred = model_draw.predict(X_draw_test)
+
+# Прогнозування результатів для перемоги гостьової команди
+y_away_win_pred = model_away_win.predict(X_away_win_test)
+
+# Оцінка моделей
+accuracy_home = accuracy_score(y_home_test, y_home_pred)
+accuracy_draw = accuracy_score(y_draw_test, y_draw_pred)
+accuracy_away_win = accuracy_score(y_away_win_test, y_away_win_pred)
+
+conf_matrix_home = confusion_matrix(y_home_test, y_home_pred)
+conf_matrix_draw = confusion_matrix(y_draw_test, y_draw_pred)
+conf_matrix_away_win = confusion_matrix(y_away_win_test, y_away_win_pred)
+
+class_report_home = classification_report(y_home_test, y_home_pred)
+class_report_draw = classification_report(y_draw_test, y_draw_pred)
+class_report_away_win = classification_report(y_away_win_test, y_away_win_pred)
+
+print("Metrics for Home win:")
+print(f'Accuracy: {accuracy_home}')
+print(f'Confusion Matrix:\n{conf_matrix_home}')
+print(f'Classification Report:\n{class_report_home}')
+
+print("Metrics for Draw:")
+print(f'Accuracy: {accuracy_draw}')
+print(f'Confusion Matrix:\n{conf_matrix_draw}')
+print(f'Classification Report:\n{class_report_draw}')
+
+print("\nMetrics for AwayWin:")
+print(f'Accuracy: {accuracy_away_win}')
+print(f'Confusion Matrix:\n{conf_matrix_away_win}')
+print(f'Classification Report:\n{class_report_away_win}')
